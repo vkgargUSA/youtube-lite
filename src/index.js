@@ -1,17 +1,52 @@
+import _ from 'lodash';
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import ReactDOM from 'react-dom';
+import YTSearch from 'youtube-api-search';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+import SearchBar from './components/search_bar';
+import VideoList from './components/video_list';
+import VideoDetail from './components/video_detail';
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+const API_KEY = 'AIzaSyC8nCY8oD8iSmQzE1Num75QR9CeixToDnE';
+
+
+
+// create a new component. This component should produce some HTML
+class App extends React.Component {
+    constructor(props){
+        super(props);
+
+        this.state = { 
+            videos: [],
+            selectedVideo: null
+         };
+
+        this.videoSearch('surfboards');
+    }
+
+    videoSearch(term){
+        YTSearch({key: API_KEY, term: term}, (videos) => {
+            this.setState({ 
+                videos: videos,
+                selectedVideo: videos[0] 
+            });
+        });
+    }
+
+    render(){
+        const videoSearch = _.debounce((term) => {this.videoSearch(term)}, 300);
+        return (
+            <div>
+                <SearchBar onSearchTermChange={videoSearch} />
+                <VideoDetail video={this.state.selectedVideo} />
+                <VideoList 
+                    onVideoSelect={selectedVideo => this.setState({selectedVideo})}
+                    videos={this.state.videos} />
+            </div>
+        );
+    }
+}
+
+
+// Take this component's generated HTML & Put it on the page / in the DOM
+ReactDOM.render(<App />, document.querySelector('.container'));
